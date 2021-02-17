@@ -253,7 +253,14 @@ namespace eosio { namespace client { namespace http {
       throw;
    }
 
-   const auto response_result = fc::json::from_string(re);
+   fc::variant response_result;
+   try {
+      response_result = fc::json::from_string(re);
+   } catch(...) {
+      // re reported below if print_response requested
+      print_response = true;
+   }
+
    if( print_response ) {
       std::cerr << "RESPONSE:" << std::endl
                 << "---------------------" << std::endl
