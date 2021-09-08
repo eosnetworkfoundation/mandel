@@ -139,8 +139,8 @@ namespace eosio {
 
         fc::logger& logger;
 
-        explicit http_plugin_state(fc::logger& log)
-            : logger(log)
+        explicit http_plugin_state(fc::logger& logger)
+            : logger(logger)
         {}
     };
 
