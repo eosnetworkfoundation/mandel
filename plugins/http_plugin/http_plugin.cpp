@@ -16,9 +16,9 @@
 namespace eosio {
 
    namespace {
-      inline fc::logger& logger() {
+      inline fc::logger* logger() {
          static fc::logger log{ "http_plugin" };
-         return log;
+         return &log;
       }
    }
 
