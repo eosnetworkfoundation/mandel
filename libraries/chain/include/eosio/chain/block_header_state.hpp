@@ -48,16 +48,80 @@ using signer_callback_type = std::function<std::vector<signature_type>(const dig
 struct block_header_state;
 
 namespace detail {
-   struct block_header_state_common {
+
+   struct confirmation_group_v0
+   {
       uint32_t                          block_num = 0;
       uint32_t                          dpos_proposed_irreversible_blocknum = 0;
       uint32_t                          dpos_irreversible_blocknum = 0;
-      producer_authority_schedule       active_schedule;
-      incremental_merkle                blockroot_merkle;
       flat_map<account_name,uint32_t>   producer_to_last_produced;
       flat_map<account_name,uint32_t>   producer_to_last_implied_irb;
-      block_signing_authority           valid_block_signing_authority;
       vector<uint8_t>                   confirm_count;
+      void set_producers(const std::vector<producer_authority>& producers);
+      confirmation_group_v0 confirm(account_name producer, std::pair<uint32_t, uint32_t> confirmed_range) const;
+      uint32_t calc_dpos_last_irreversible( account_name producer_of_next_block )const;
+      std::size_t num_active_producers() const;
+      uint32_t last_irreversible_block_num() const
+      {
+         return dpos_irreversible_blocknum;
+      }
+      uint32_t order() const
+      {
+         return dpos_irreversible_blocknum;
+      }
+   };
+
+   // First confirmations must be added in sequential order
+   // second confirmations are issued automatically.
+   // Only the most recent contiguous range of second confirmations for each producer is tracked.
+   // Differences from v0:
+   // - Fork switching prefers blocks with higher proposed_irreversible_blocknum
+   //   instead of dpos_irreversible_blocknum
+   // - Second confirmations are bounded by contiguous confirmations
+   // - Confirmations are not limited to the 1024 most recent blocks (Non-critical)
+   struct confirmation_group_v1
+   {
+      uint32_t proposed_irreversible_blocknum = 0;
+      uint32_t irreversible_blocknum = 0;
+      // Represents the most recent contiguous range of blocks confirmed by this producer
+      flat_map<account_name, std::pair<uint32_t, uint32_t>> producer_to_last_confirmed;
+      // Represents the most recent contiguous range of blocks with second confirmations by this producer
+      flat_map<account_name, std::pair<uint32_t, uint32_t>> producer_to_second_confirmations;
+      void set_producers(const std::vector<producer_authority>& producers);
+      void set_producers(const std::vector<account_name>& producers);
+      // confirmed_range must be above any range previously confirmed by the same producer
+      confirmation_group_v1 confirm(account_name producer, std::pair<uint32_t, uint32_t> confirmed_range) const;
+      // TODO: transition tests away from this
+      void confirm1(account_name producer, std::pair<uint32_t, uint32_t> confirmed_range)
+      {
+         *this = confirm(producer, confirmed_range);
+      }
+      uint32_t last_irreversible_block_num() const
+      {
+         return irreversible_blocknum;
+      }
+      uint32_t order() const
+      {
+         return proposed_irreversible_blocknum;
+      }
+   };
+
+   struct block_header_state_common {
+      uint32_t                          block_num = 0;
+      static_variant<confirmation_group_v0, confirmation_group_v1> confirmations;
+      producer_authority_schedule       active_schedule;
+      incremental_merkle                blockroot_merkle;
+      block_signing_authority           valid_block_signing_authority;
+
+      uint32_t last_irreversible_block_num() const
+      {
+         return confirmations.visit([](const auto& c){ return c.last_irreversible_block_num(); });
+      }
+      auto order() const
+      {
+         return std::tuple(confirmations.which(), confirmations.visit([](const auto& c){ return c.order(); }), block_num);
+      }
+
    };
 
    struct schedule_info {
@@ -159,16 +223,32 @@ using block_header_state_ptr = std::shared_ptr<block_header_state>;
 
 } } /// namespace eosio::chain
 
-FC_REFLECT( eosio::chain::detail::block_header_state_common,
-            (block_num)
+FC_REFLECT( eosio::chain::detail::confirmation_group_v0,
             (dpos_proposed_irreversible_blocknum)
             (dpos_irreversible_blocknum)
-            (active_schedule)
-            (blockroot_merkle)
             (producer_to_last_produced)
             (producer_to_last_implied_irb)
-            (valid_block_signing_authority)
             (confirm_count)
+)
+
+FC_REFLECT( eosio::chain::detail::confirmation_group_v1,
+            (proposed_irreversible_blocknum)
+            (irreversible_blocknum)
+            (producer_to_last_confirmed)
+            (producer_to_second_confirmations)
+)
+
+FC_REFLECT( eosio::chain::detail::block_header_state_common,
+            (block_num)
+            (confirmations)
+            //(dpos_proposed_irreversible_blocknum)
+            //(dpos_irreversible_blocknum)
+            (active_schedule)
+            (blockroot_merkle)
+            //(producer_to_last_produced)
+            //(producer_to_last_implied_irb)
+            (valid_block_signing_authority)
+            //(confirm_count)
 )
 
 FC_REFLECT( eosio::chain::detail::schedule_info,

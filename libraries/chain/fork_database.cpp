@@ -7,6 +7,7 @@
 #include <boost/multi_index/mem_fun.hpp>
 #include <boost/multi_index/global_fun.hpp>
 #include <boost/multi_index/composite_key.hpp>
+#include <boost/multi_index/key.hpp>
 #include <fc/io/fstream.hpp>
 #include <fstream>
 
@@ -40,14 +41,12 @@ namespace eosio { namespace chain {
          ordered_unique< tag<by_lib_block_num>,
             composite_key< block_state,
                global_fun<const block_state&,            bool,          &block_state_is_valid>,
-               member<detail::block_header_state_common, uint32_t,      &detail::block_header_state_common::dpos_irreversible_blocknum>,
-               member<detail::block_header_state_common, uint32_t,      &detail::block_header_state_common::block_num>,
+               key<&block_header_state::order>,
                member<block_header_state,                block_id_type, &block_header_state::id>
             >,
             composite_key_compare<
                std::greater<bool>,
-               std::greater<uint32_t>,
-               std::greater<uint32_t>,
+               std::greater<>,
                sha256_less
             >
          >
@@ -55,8 +54,7 @@ namespace eosio { namespace chain {
    > fork_multi_index_type;
 
    bool first_preferred( const block_header_state& lhs, const block_header_state& rhs ) {
-      return std::tie( lhs.dpos_irreversible_blocknum, lhs.block_num )
-               > std::tie( rhs.dpos_irreversible_blocknum, rhs.block_num );
+      return lhs.order() > rhs.order();
    }
 
    struct fork_database_impl {

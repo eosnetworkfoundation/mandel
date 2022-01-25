@@ -118,9 +118,9 @@ BOOST_AUTO_TEST_CASE( fork_with_bad_block ) try {
    }
 
    // make sure we can still produce a blocks until irreversibility moves
-   auto lib = bios.control->head_block_state()->dpos_irreversible_blocknum;
+   auto lib = bios.control->head_block_state()->last_irreversible_block_num();
    size_t tries = 0;
-   while (bios.control->head_block_state()->dpos_irreversible_blocknum == lib && ++tries < 10000) {
+   while (bios.control->head_block_state()->last_irreversible_block_num() == lib && ++tries < 10000) {
       bios.produce_block();
    }
 

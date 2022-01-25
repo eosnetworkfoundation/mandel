@@ -480,6 +480,7 @@ BOOST_AUTO_TEST_CASE( producer_watermark_test ) try {
    auto alice_last_produced_block_num = c.control->head_block_num();
    wdump((alice_last_produced_block_num));
 
+#if 0
    {
       wdump((c.control->head_block_state()->producer_to_last_produced));
       const auto& last_produced = c.control->head_block_state()->producer_to_last_produced;
@@ -493,6 +494,7 @@ BOOST_AUTO_TEST_CASE( producer_watermark_test ) try {
       BOOST_REQUIRE( carol_itr != last_produced.end() );
       BOOST_CHECK_EQUAL( carol_itr->second, carol_last_produced_block_num );
    }
+#endif
 
    BOOST_CHECK_EQUAL( c.control->pending_producers().version, 3u );
    BOOST_REQUIRE_EQUAL( c.control->active_producers().version, 2u );
@@ -664,5 +666,123 @@ BOOST_AUTO_TEST_CASE( large_authority_overflow_test ) try {
    BOOST_REQUIRE_EQUAL(res.first, true);
    BOOST_REQUIRE_EQUAL(res.second, provided_keys.size());
 } FC_LOG_AND_RETHROW()
+
+// Tests the limits on confirmation of the first block produced by each producer
+// under a new producer schedule.
+BOOST_FIXTURE_TEST_CASE( allowed_confirmations, TESTER )
+{
+   create_accounts( {N(alice),N(bob),N(carol)} );
+   produce_block();
+
+   set_producers( {N(alice),N(bob)} );
+   produce_blocks( 1 );
+   BOOST_CHECK_EQUAL( control->active_producers().version, 0u );
+
+   produce_block();
+   BOOST_CHECK_EQUAL( control->active_producers().version, 1u );
+   produce_block();
+   set_producers( {N(alice), N(bob), N(carol)} );
+   while ( control->active_producers().version == 1u )
+   {
+      produce_block();
+   }
+
+   // alice and bob's confirmation limits carries over from the previous producer schedule
+   // carol's confirmations limit is lib
+
+   produce_block();
+   auto schedule2_base = control->last_irreversible_block_num();
+
+   std::set<account_name> have_produced;
+
+   while ( have_produced.size() < 3 )
+   {
+      if ( have_produced.insert( control->pending_block_producer() ).second )
+      {
+         BOOST_CHECK_EQUAL( control->active_producers().version, 2u );
+         auto head_block_number = control->head_block_num();
+         auto block_time = control->pending_block_time();
+
+         uint32_t expected_last_produced;
+         if ( control->pending_block_producer() == N(carol) )
+         {
+            expected_last_produced = schedule2_base;
+         }
+         else
+         {
+            auto itr = last_produced_block.find(control->pending_block_producer());
+            expected_last_produced = block_header::num_from_id(itr->second);
+         }
+
+         control->abort_block();
+         BOOST_CHECK_THROW( control->start_block( block_time, head_block_number - expected_last_produced + 1),
+                            producer_double_confirm );
+         control->start_block( block_time, head_block_number - expected_last_produced );
+      }
+      produce_block();
+   }
+}
+
+// The producer of the block that activates the new producer schedule
+// is remembered even if it is not part of the new schedule.
+BOOST_FIXTURE_TEST_CASE( allowed_confirmations_extra, TESTER )
+{
+   create_accounts( {N(alice),N(bob),N(carol)} );
+   produce_block();
+
+   set_producers( {N(alice),N(bob),N(carol)} );
+   produce_blocks(1);
+   BOOST_CHECK_EQUAL( control->active_producers().version, 0u );
+
+   produce_block();
+   BOOST_CHECK_EQUAL( control->active_producers().version, 1u );
+   produce_block();
+   set_producers( {N(eosio)} );
+   while ( control->active_producers().version == 1u )
+   {
+      produce_block();
+   }
+
+   auto last_produced_block_num = control->head_block_num() + 1;
+   auto last_producer = control->pending_block_producer();
+   BOOST_TEST( last_producer != N(eosio) );
+   produce_blocks( 24 );
+   set_producers( {N(alice),N(bob),N(carol)} );
+
+   BOOST_TEST( last_producer ==  N(carol) );
+
+   std::set<account_name> have_produced{ N(eosio) };
+   uint32_t schedule3_base = 0;
+
+   while ( have_produced.size() < 4 )
+   {
+      if ( have_produced.insert( control->pending_block_producer() ).second )
+      {
+         if ( schedule3_base == 0 )
+         {
+            schedule3_base = control->last_irreversible_block_num();
+         }
+         BOOST_CHECK_EQUAL( control->active_producers().version, 3u );
+         auto head_block_number = control->head_block_num();
+         auto block_time = control->pending_block_time();
+
+         uint32_t expected_last_produced;
+         if ( control->pending_block_producer() == last_producer )
+         {
+            expected_last_produced = last_produced_block_num;
+         }
+         else
+         {
+            expected_last_produced = schedule3_base;
+         }
+
+         control->abort_block();
+         BOOST_CHECK_THROW( control->start_block( block_time, head_block_number - expected_last_produced + 1),
+                            producer_double_confirm );
+         control->start_block( block_time, head_block_number - expected_last_produced );
+      }
+      produce_block();
+   }
+}
 
 BOOST_AUTO_TEST_SUITE_END()

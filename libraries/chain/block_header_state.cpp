@@ -21,7 +21,48 @@ namespace eosio { namespace chain {
       return active_schedule.producers[index];
    }
 
-   uint32_t block_header_state::calc_dpos_last_irreversible( account_name producer_of_next_block )const {
+   namespace detail {
+
+   void confirmation_group_v0::set_producers(const std::vector<producer_authority>& producers)
+   {
+      flat_map<account_name,uint32_t> new_producer_to_last_produced;
+
+      for( const auto& pro : producers ) {
+            auto existing = producer_to_last_produced.find( pro.producer_name );
+            if( existing != producer_to_last_produced.end() ) {
+               new_producer_to_last_produced[pro.producer_name] = existing->second;
+            } else {
+               new_producer_to_last_produced[pro.producer_name] = dpos_irreversible_blocknum;
+            }
+      }
+      // This is really annoying, because it should be redundant,
+      // except for the fact that it can carry over to the next producer schedule
+      // Conjecture:
+      // If the new producer schedule does not include the producer who created the block that activated it,
+      // but the next producer schedule does include this producer, it will be allowed to confirm
+      // blocks farther back than any other producer that gets switched in.
+      // TODO: test whether this is actually observable
+      auto last_producer = std::find_if(producer_to_last_produced.begin(), producer_to_last_produced.end(),
+                                        [=](const auto& arg){ return arg.second == block_num; });
+      new_producer_to_last_produced[last_producer->first] = block_num;
+
+      producer_to_last_produced = std::move( new_producer_to_last_produced );
+
+      flat_map<account_name,uint32_t> new_producer_to_last_implied_irb;
+
+      for( const auto& pro : producers ) {
+         auto existing = producer_to_last_implied_irb.find( pro.producer_name );
+         if( existing != producer_to_last_implied_irb.end() ) {
+            new_producer_to_last_implied_irb[pro.producer_name] = existing->second;
+         } else {
+            new_producer_to_last_implied_irb[pro.producer_name] = dpos_irreversible_blocknum;
+         }
+      }
+
+      producer_to_last_implied_irb = std::move( new_producer_to_last_implied_irb );
+   }
+
+   uint32_t confirmation_group_v0::calc_dpos_last_irreversible( account_name producer_of_next_block )const {
       vector<uint32_t> blocknums; blocknums.reserve( producer_to_last_implied_irb.size() );
       for( auto& i : producer_to_last_implied_irb ) {
          blocknums.push_back( (i.first == producer_of_next_block) ? dpos_proposed_irreversible_blocknum : i.second);
@@ -35,46 +76,38 @@ namespace eosio { namespace chain {
       return blocknums[ index ];
    }
 
-   pending_block_header_state  block_header_state::next( block_timestamp_type when,
-                                                         uint16_t num_prev_blocks_to_confirm )const
+   std::size_t confirmation_group_v0::num_active_producers() const
    {
-      pending_block_header_state result;
-
-      if( when != block_timestamp_type() ) {
-        EOS_ASSERT( when > header.timestamp, block_validate_exception, "next block must be in the future" );
-      } else {
-        (when = header.timestamp).slot++;
+      if(producer_to_last_implied_irb.empty())
+      {
+         return 1;
       }
-
-      auto proauth = get_scheduled_producer(when);
-
-      auto itr = producer_to_last_produced.find( proauth.producer_name );
-      if( itr != producer_to_last_produced.end() ) {
-        EOS_ASSERT( itr->second < (block_num+1) - num_prev_blocks_to_confirm, producer_double_confirm,
-                    "producer ${prod} double-confirming known range",
-                    ("prod", proauth.producer_name)("num", block_num+1)
-                    ("confirmed", num_prev_blocks_to_confirm)("last_produced", itr->second) );
+      else
+      {
+         return producer_to_last_implied_irb.size();
       }
+   }
 
-      result.block_num                                       = block_num + 1;
-      result.previous                                        = id;
-      result.timestamp                                       = when;
-      result.confirmed                                       = num_prev_blocks_to_confirm;
-      result.active_schedule_version                         = active_schedule.version;
-      result.prev_activated_protocol_features                = activated_protocol_features;
+   confirmation_group_v0 confirmation_group_v0::confirm(account_name producer, std::pair<uint32_t, uint32_t> confirmed_range) const
+   {
+      confirmation_group_v0 result;
 
-      result.valid_block_signing_authority                   = proauth.authority;
-      result.producer                                        = proauth.producer_name;
-
-      result.blockroot_merkle = blockroot_merkle;
-      result.blockroot_merkle.append( id );
+      result.block_num = confirmed_range.second - 1;
 
       /// grow the confirmed count
       static_assert(std::numeric_limits<uint8_t>::max() >= (config::max_producers * 2 / 3) + 1, "8bit confirmations may not be able to hold all of the needed confirmations");
 
       // This uses the previous block active_schedule because thats the "schedule" that signs and therefore confirms _this_ block
-      auto num_active_producers = active_schedule.producers.size();
-      uint32_t required_confs = (uint32_t)(num_active_producers * 2 / 3) + 1;
+      uint32_t required_confs = (uint32_t)(num_active_producers() * 2 / 3) + 1;
+
+      auto itr = producer_to_last_produced.find( producer );
+      if( itr != producer_to_last_produced.end() ) {
+        EOS_ASSERT( itr->second < confirmed_range.first, producer_double_confirm,
+                    "producer ${prod} double-confirming known range",
+                    ("prod", producer)("num", block_num+1)
+                    ("confirmed", confirmed_range.second - confirmed_range.first - 1)
+                    ("last_produced", itr->second) );
+      }
 
       if( confirm_count.size() < config::maximum_tracked_dpos_confirmations ) {
          result.confirm_count.reserve( confirm_count.size() + 1 );
@@ -90,7 +123,7 @@ namespace eosio { namespace chain {
       auto new_dpos_proposed_irreversible_blocknum = dpos_proposed_irreversible_blocknum;
 
       int32_t i = (int32_t)(result.confirm_count.size() - 1);
-      uint32_t blocks_to_confirm = num_prev_blocks_to_confirm + 1; /// confirm the head block too
+      uint32_t blocks_to_confirm = confirmed_range.second - confirmed_range.first; /// confirm the head block too
       while( i >= 0 && blocks_to_confirm ) {
         --result.confirm_count[i];
         //idump((confirm_count[i]));
@@ -114,57 +147,160 @@ namespace eosio { namespace chain {
       }
 
       result.dpos_proposed_irreversible_blocknum   = new_dpos_proposed_irreversible_blocknum;
-      result.dpos_irreversible_blocknum            = calc_dpos_last_irreversible( proauth.producer_name );
+      result.dpos_irreversible_blocknum            = calc_dpos_last_irreversible( producer );
+
+      result.producer_to_last_produced        = producer_to_last_produced;
+      result.producer_to_last_produced[producer] = result.block_num;
+      result.producer_to_last_implied_irb     = producer_to_last_implied_irb;
+      result.producer_to_last_implied_irb[producer] = dpos_proposed_irreversible_blocknum;
+
+      return result;
+   }
+
+   void confirmation_group_v1::set_producers(const std::vector<producer_authority>& producers)
+   {
+      producer_to_last_confirmed.clear();
+      producer_to_last_confirmed.reserve(producers.size());
+      producer_to_second_confirmations.clear();
+      for(const producer_authority& prod : producers)
+      {
+         producer_to_last_confirmed.insert(std::pair{prod.producer_name, std::pair<uint32_t, uint32_t>{0,0}});
+      }
+   }
+
+   void confirmation_group_v1::set_producers(const std::vector<account_name>& producers)
+   {
+      producer_to_last_confirmed.clear();
+      producer_to_last_confirmed.reserve(producers.size());
+      producer_to_second_confirmations.clear();
+      for(account_name prod : producers)
+      {
+         producer_to_last_confirmed.insert(std::pair{prod, std::pair<uint32_t, uint32_t>{0,0}});
+      }
+   }
+
+   // Returns the highest range that is contained by at least threshold input ranges
+   static std::pair<uint32_t, uint32_t> threshold_intersection(const flat_map<account_name, std::pair<uint32_t, uint32_t>>& inputs, std::size_t threshold)
+   {
+      std::vector<std::pair<uint32_t, int8_t>> counters;
+      counters.reserve(inputs.size() * 2);
+      for(const auto& [account, range] : inputs)
+      {
+         counters.push_back({range.first, 1});
+         counters.push_back({range.second, -1});
+      }
+      std::sort(counters.begin(), counters.end(), std::greater<>());
+      uint32_t start = 0;
+      uint32_t prev = 0;
+      uint32_t total = 0;
+      uint32_t prev_total = 0;
+      for(auto [x, direction] : counters)
+      {
+         if(x != prev)
+         {
+            if(prev_total >= threshold && total < threshold)
+            {
+               break;
+            }
+            else if(prev_total < threshold && total >= threshold)
+            {
+               start = prev;
+            }
+            prev_total = total;
+            prev = x;
+         }
+         total -= direction;
+      }
+      return {prev, start};
+   }
+
+   confirmation_group_v1 confirmation_group_v1::confirm(account_name producer, std::pair<uint32_t, uint32_t> confirmed_range) const
+   {
+      confirmation_group_v1 result = *this;
+      if(confirmed_range.first == confirmed_range.second)
+      {
+         return result;
+      }
+      if(producer_to_last_confirmed.empty())
+      {
+         result.set_producers({N(eosio)});
+      }
+
+      uint32_t threshold = result.producer_to_last_confirmed.size()*2/3 + 1;
+
+      // Update last confirmed
+      auto iter = result.producer_to_last_confirmed.find(producer);
+      EOS_ASSERT( iter != result.producer_to_last_confirmed.end() &&
+                  iter->second.second <= confirmed_range.first &&
+                  confirmed_range.first <= confirmed_range.second, block_validate_exception, "Illegal confirmation" );
+
+      if(iter->second.second == confirmed_range.first)
+      {
+         iter->second.second = confirmed_range.second;
+      }
+      else
+      {
+         iter->second = confirmed_range;
+      }
+
+      auto second_confirmations = threshold_intersection(result.producer_to_last_confirmed, threshold);
+      second_confirmations.first = iter->second.first;
+      if(second_confirmations.first < second_confirmations.second)
+      {
+         result.proposed_irreversible_blocknum = std::max(proposed_irreversible_blocknum, second_confirmations.second - 1);
+
+         result.producer_to_second_confirmations[producer] = second_confirmations;
+         auto [low, high] = threshold_intersection(result.producer_to_second_confirmations, threshold);
+         if(low < high)
+         {
+            result.irreversible_blocknum = std::max(irreversible_blocknum, high - 1);
+         }
+      }
+      return result;
+   }
+
+   }
+
+   pending_block_header_state  block_header_state::next( block_timestamp_type when,
+                                                         uint16_t num_prev_blocks_to_confirm )const
+   {
+      pending_block_header_state result;
+
+      if( when != block_timestamp_type() ) {
+        EOS_ASSERT( when > header.timestamp, block_validate_exception, "next block must be in the future" );
+      } else {
+        (when = header.timestamp).slot++;
+      }
+
+      auto proauth = get_scheduled_producer(when);
+
+      result.block_num                                       = block_num + 1;
+      result.previous                                        = id;
+      result.timestamp                                       = when;
+      result.confirmed                                       = num_prev_blocks_to_confirm;
+      result.active_schedule_version                         = active_schedule.version;
+      result.prev_activated_protocol_features                = activated_protocol_features;
+
+      result.valid_block_signing_authority                   = proauth.authority;
+      result.producer                                        = proauth.producer_name;
+
+      result.blockroot_merkle = blockroot_merkle;
+      result.blockroot_merkle.append( id );
+
+      confirmations.visit([&](const auto& c){ result.confirmations = c.confirm( proauth.producer_name, { result.block_num - num_prev_blocks_to_confirm, result.block_num + 1 } ); });
 
       result.prev_pending_schedule                 = pending_schedule;
 
       if( pending_schedule.schedule.producers.size() &&
-          result.dpos_irreversible_blocknum >= pending_schedule.schedule_lib_num )
+          result.last_irreversible_block_num() >= pending_schedule.schedule_lib_num )
       {
          result.active_schedule = pending_schedule.schedule;
 
-         flat_map<account_name,uint32_t> new_producer_to_last_produced;
-
-         for( const auto& pro : result.active_schedule.producers ) {
-            if( pro.producer_name == proauth.producer_name ) {
-               new_producer_to_last_produced[pro.producer_name] = result.block_num;
-            } else {
-               auto existing = producer_to_last_produced.find( pro.producer_name );
-               if( existing != producer_to_last_produced.end() ) {
-                  new_producer_to_last_produced[pro.producer_name] = existing->second;
-               } else {
-                  new_producer_to_last_produced[pro.producer_name] = result.dpos_irreversible_blocknum;
-               }
-            }
-         }
-         new_producer_to_last_produced[proauth.producer_name] = result.block_num;
-
-         result.producer_to_last_produced = std::move( new_producer_to_last_produced );
-
-         flat_map<account_name,uint32_t> new_producer_to_last_implied_irb;
-
-         for( const auto& pro : result.active_schedule.producers ) {
-            if( pro.producer_name == proauth.producer_name ) {
-               new_producer_to_last_implied_irb[pro.producer_name] = dpos_proposed_irreversible_blocknum;
-            } else {
-               auto existing = producer_to_last_implied_irb.find( pro.producer_name );
-               if( existing != producer_to_last_implied_irb.end() ) {
-                  new_producer_to_last_implied_irb[pro.producer_name] = existing->second;
-               } else {
-                  new_producer_to_last_implied_irb[pro.producer_name] = result.dpos_irreversible_blocknum;
-               }
-            }
-         }
-
-         result.producer_to_last_implied_irb = std::move( new_producer_to_last_implied_irb );
+         result.confirmations.visit([&](auto& c){ c.set_producers( result.active_schedule.producers ); });
 
          result.was_pending_promoted = true;
       } else {
          result.active_schedule                  = active_schedule;
-         result.producer_to_last_produced        = producer_to_last_produced;
-         result.producer_to_last_produced[proauth.producer_name] = result.block_num;
-         result.producer_to_last_implied_irb     = producer_to_last_implied_irb;
-         result.producer_to_last_implied_irb[proauth.producer_name] = dpos_proposed_irreversible_blocknum;
       }
 
       return result;
@@ -454,15 +590,17 @@ namespace eosio { namespace chain {
 
    block_header_state::block_header_state( legacy::snapshot_block_header_state_v2&& snapshot )
    {
+      auto& confirmations0 = confirmations.get<detail::confirmation_group_v0>();
+      confirmations0.block_num = snapshot.block_num;
       block_num                             = snapshot.block_num;
-      dpos_proposed_irreversible_blocknum   = snapshot.dpos_proposed_irreversible_blocknum;
-      dpos_irreversible_blocknum            = snapshot.dpos_irreversible_blocknum;
+      confirmations0.dpos_proposed_irreversible_blocknum   = snapshot.dpos_proposed_irreversible_blocknum;
+      confirmations0.dpos_irreversible_blocknum            = snapshot.dpos_irreversible_blocknum;
       active_schedule                       = producer_authority_schedule( snapshot.active_schedule );
       blockroot_merkle                      = std::move(snapshot.blockroot_merkle);
-      producer_to_last_produced             = std::move(snapshot.producer_to_last_produced);
-      producer_to_last_implied_irb          = std::move(snapshot.producer_to_last_implied_irb);
+      confirmations0.producer_to_last_produced             = std::move(snapshot.producer_to_last_produced);
+      confirmations0.producer_to_last_implied_irb          = std::move(snapshot.producer_to_last_implied_irb);
       valid_block_signing_authority         = block_signing_authority_v0{ 1, {{std::move(snapshot.block_signing_key), 1}} };
-      confirm_count                         = std::move(snapshot.confirm_count);
+      confirmations0.confirm_count                         = std::move(snapshot.confirm_count);
       id                                    = std::move(snapshot.id);
       header                                = std::move(snapshot.header);
       pending_schedule.schedule_lib_num     = snapshot.pending_schedule.schedule_lib_num;

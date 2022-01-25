@@ -380,7 +380,7 @@ class producer_plugin_impl : public std::enable_shared_from_this<producer_plugin
             if( chain.get_read_mode() != db_read_mode::IRREVERSIBLE && hbs->id != id && hbs->block != nullptr ) { // not applied to head
                ilog("Block not applied to head ${id}... #${n} @ ${t} signed by ${p} [trxs: ${count}, dpos: ${dpos}, conf: ${confs}, latency: ${latency} ms]",
                     ("p",hbs->block->producer)("id",hbs->id.str().substr(8,16))("n",hbs->block_num)("t",hbs->block->timestamp)
-                    ("count",hbs->block->transactions.size())("dpos", hbs->dpos_irreversible_blocknum)
+                    ("count",hbs->block->transactions.size())("dpos", hbs->last_irreversible_block_num())
                     ("confs", hbs->block->confirmed)("latency", (fc::time_point::now() - hbs->block->timestamp).count()/1000 ) );
             }
          }
@@ -1599,7 +1599,7 @@ producer_plugin_impl::start_block_result producer_plugin_impl::start_block() {
          }
 
          // can not confirm irreversible blocks
-         blocks_to_confirm = (uint16_t)(std::min<uint32_t>(blocks_to_confirm, (uint32_t)(hbs->block_num - hbs->dpos_irreversible_blocknum)));
+         blocks_to_confirm = (uint16_t)(std::min<uint32_t>(blocks_to_confirm, (uint32_t)(hbs->block_num - hbs->last_irreversible_block_num())));
       }
 
       abort_block();

@@ -407,10 +407,10 @@ struct controller_impl {
 
       auto fork_head = (read_mode == db_read_mode::IRREVERSIBLE) ? fork_db.pending_head() : fork_db.head();
 
-      if( fork_head->dpos_irreversible_blocknum <= lib_num )
+      if( fork_head->last_irreversible_block_num() <= lib_num )
          return;
 
-      const auto branch = fork_db.fetch_branch( fork_head->id, fork_head->dpos_irreversible_blocknum );
+      const auto branch = fork_db.fetch_branch( fork_head->id, fork_head->last_irreversible_block_num() );
       try {
          const auto& rbi = reversible_blocks.get_index<reversible_block_index,by_num>();
 
@@ -1655,7 +1655,7 @@ struct controller_impl {
          const auto& gpo = db.get<global_property_object>();
 
          if( gpo.proposed_schedule_block_num.valid() && // if there is a proposed schedule that was proposed in a block ...
-             ( *gpo.proposed_schedule_block_num <= pbhs.dpos_irreversible_blocknum ) && // ... that has now become irreversible ...
+             ( *gpo.proposed_schedule_block_num <= pbhs.last_irreversible_block_num() ) && // ... that has now become irreversible ...
              pbhs.prev_pending_schedule.schedule.producers.size() == 0 // ... and there was room for a new pending schedule prior to any possible promotion
          )
          {
@@ -1663,7 +1663,7 @@ struct controller_impl {
             if( !replay_head_time ) {
                ilog( "promoting proposed schedule (set in block ${proposed_num}) to pending; current block: ${n} lib: ${lib} schedule: ${schedule} ",
                      ("proposed_num", *gpo.proposed_schedule_block_num)("n", pbhs.block_num)
-                     ("lib", pbhs.dpos_irreversible_blocknum)
+                     ("lib", pbhs.last_irreversible_block_num())
                      ("schedule", producer_authority_schedule::from_shared(gpo.proposed_schedule) ) );
             }
 
