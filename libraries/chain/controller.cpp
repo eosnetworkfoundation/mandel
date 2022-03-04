@@ -2297,13 +2297,17 @@ struct controller_impl {
                                                        config::active_name}),
                          calculate_threshold( 2, 3 ) /* more than two-thirds */                      );
 
-      update_permission( authorization.get_permission({config::producers_account_name,
-                                                       config::majority_producers_permission_name}),
-                         calculate_threshold( 1, 2 ) /* more than one-half */                        );
+      const permission_object* major_perm = authorization.find_permission({config::producers_account_name,
+                                                                           config::majority_producers_permission_name});
+      if( major_perm ) {
+         update_permission( *major_perm, calculate_threshold( 1, 2 ) /* more than one-half */ );
+      }
 
-      update_permission( authorization.get_permission({config::producers_account_name,
-                                                       config::minority_producers_permission_name}),
-                         calculate_threshold( 1, 3 ) /* more than one-third */                       );
+      const permission_object* minor_perm = authorization.find_permission({config::producers_account_name,
+                                                                           config::minority_producers_permission_name});
+      if( minor_perm ) {
+         update_permission( *minor_perm, calculate_threshold( 1, 3 ) /* more than one-third */ );
+      }
 
       //TODO: Add tests
    }

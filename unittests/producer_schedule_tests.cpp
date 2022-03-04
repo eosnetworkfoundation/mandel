@@ -1,4 +1,5 @@
 #include <eosio/chain/global_property_object.hpp>
+#include <eosio/chain/authorization_manager.hpp>
 #include <eosio/testing/tester.hpp>
 
 #include <boost/test/unit_test.hpp>
@@ -228,6 +229,13 @@ BOOST_FIXTURE_TEST_CASE( producer_schedule_promotion_test, TESTER ) try {
    BOOST_CHECK_EQUAL( control->active_producers().version, 1u );
    BOOST_CHECK_EQUAL( true, compare_schedules( sch1, control->active_producers() ) );
    produce_blocks(6);
+
+   // verify prod.minor and prod.major permissions can be removed
+   auto& authorization = control->get_mutable_authorization_manager();
+   const auto& minor_permission = authorization.get_permission({config::producers_account_name, config::minority_producers_permission_name});
+   authorization.remove_permission( minor_permission );
+   const auto& majority_permission = authorization.get_permission({config::producers_account_name, config::majority_producers_permission_name});
+   authorization.remove_permission( majority_permission );
 
    res = set_producers( {"alice"_n,"bob"_n,"carol"_n} );
    vector<producer_authority> sch2 = {
