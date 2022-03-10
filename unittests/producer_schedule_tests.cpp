@@ -1,5 +1,4 @@
 #include <eosio/chain/global_property_object.hpp>
-#include <eosio/chain/authorization_manager.hpp>
 #include <eosio/testing/tester.hpp>
 
 #include <boost/test/unit_test.hpp>
@@ -229,13 +228,6 @@ BOOST_FIXTURE_TEST_CASE( producer_schedule_promotion_test, TESTER ) try {
    BOOST_CHECK_EQUAL( control->active_producers().version, 1u );
    BOOST_CHECK_EQUAL( true, compare_schedules( sch1, control->active_producers() ) );
    produce_blocks(6);
-
-   // verify prod.minor and prod.major permissions can be removed
-   auto& authorization = control->get_mutable_authorization_manager();
-   const auto& minor_permission = authorization.get_permission({config::producers_account_name, config::minority_producers_permission_name});
-   authorization.remove_permission( minor_permission );
-   const auto& majority_permission = authorization.get_permission({config::producers_account_name, config::majority_producers_permission_name});
-   authorization.remove_permission( majority_permission );
 
    res = set_producers( {"alice"_n,"bob"_n,"carol"_n} );
    vector<producer_authority> sch2 = {
@@ -672,5 +664,28 @@ BOOST_AUTO_TEST_CASE( large_authority_overflow_test ) try {
    BOOST_REQUIRE_EQUAL(res.first, true);
    BOOST_REQUIRE_EQUAL(res.second, provided_keys.size());
 } FC_LOG_AND_RETHROW()
+
+BOOST_FIXTURE_TEST_CASE( deleteauth_prod_minor_major_test, TESTER ) try {
+   create_accounts( {"alice"_n} );
+   produce_block();
+
+   // verify prod.minor and prod.major permissions can be removed
+   delete_authority(config::producers_account_name, config::minority_producers_permission_name,
+                    { permission_level{ config::producers_account_name, config::active_name } }, { get_private_key( config::system_account_name, "active" ) });
+   delete_authority(config::producers_account_name, config::majority_producers_permission_name,
+                    { permission_level{ config::producers_account_name, config::active_name } }, { get_private_key( config::system_account_name, "active" ) });
+
+
+   vector<producer_authority> sch1 = {
+        producer_authority{"alice"_n, block_signing_authority_v0{1, {{get_public_key("alice"_n, "bs1"), 1}}}}
+   };
+   block_signing_private_keys.emplace(get_public_key("alice"_n, "bs1"), get_private_key("alice"_n, "bs1"));
+
+   auto res = set_producer_schedule( sch1 );
+
+   BOOST_REQUIRE(produce_until_blocks_from(*this, {"alice"_n}, 300));
+
+} FC_LOG_AND_RETHROW()
+
 
 BOOST_AUTO_TEST_SUITE_END()
