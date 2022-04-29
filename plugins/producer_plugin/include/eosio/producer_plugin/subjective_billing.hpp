@@ -113,6 +113,7 @@ public: // public for tests
 
 public:
    void disable() { _disabled = true; }
+   bool is_disabled() const {return _disabled;}
    void disable_account( chain::account_name a ) { _disabled_accounts.emplace( a ); }
    bool is_account_disabled(const account_name& a ) const { return _disabled_accounts.count( a ); }
 
