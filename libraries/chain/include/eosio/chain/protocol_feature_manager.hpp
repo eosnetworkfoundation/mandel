@@ -29,6 +29,8 @@ enum class builtin_protocol_feature_t : uint32_t {
    configurable_wasm_limits,
    blockchain_parameters,
    get_code_hash,
+   get_block_num,
+   evm_precompiles
 };
 
 struct protocol_feature_subjective_restrictions {
