@@ -2,7 +2,7 @@
 
 echo "Mandel Pinned Build"
 
-if [[ $(uname -v) != *Ubuntu* ]]
+if [[ $("uname -a") != *Ubuntu* ]]
    then
       echo "Currently only supporting Ubuntu based builds. Proceed at your own risk."
 fi
