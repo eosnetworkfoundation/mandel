@@ -2,7 +2,7 @@
 
 echo "Mandel Pinned Build"
 
-if [[ $NAME != "Ubuntu" ]]
+if [[ $(uname -v) != *Ubuntu* ]]
    then
       echo "Currently only supporting Ubuntu based builds. Proceed at your own risk."
 fi
@@ -112,6 +112,8 @@ pushdir ${DEP_DIR}
 install_clang ${DEP_DIR}/clang-${CLANG_VER}
 install_llvm ${DEP_DIR}/llvm-${LLVM_VER}
 install_boost ${DEP_DIR}/boost_${BOOST_VER//\./_}
+
+popdir ${SCRIPT_DIR}
 
 pushdir ${MANDEL_DIR}
 
