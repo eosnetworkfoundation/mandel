@@ -2,9 +2,18 @@
 
 echo "Mandel Pinned Build"
 
-if [[ $("uname -a") != *Ubuntu* ]]
-   then
-      echo "Currently only supporting Ubuntu based builds. Proceed at your own risk."
+if [[ "$(uname)" == "Linux" ]]; then
+   if [[ -e /etc/os-release ]]; then
+      # obtain NAME and other information
+      . /etc/os-release
+      if [[ ${NAME} != "Ubuntu" ]]; then
+         echo "Currently only supporting Ubuntu based builds. Proceed at your own risk."
+      fi
+   else
+       echo "Currently only supporting Ubuntu based builds. /etc/os-release not found. Your Linux distribution is not supported. Proceed at your own risk."
+   fi
+else
+    echo "Currently only supporting Ubuntu based builds. Your architecture is not supported. Proceed at your own risk."
 fi
 
 if [ $# -eq 0 ] || [ -z "$1" ]
