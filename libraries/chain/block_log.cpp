@@ -307,15 +307,6 @@ namespace eosio { namespace chain {
             my->block_file.skip(-sizeof(uint32_t));
          }
 
-         auto reconstruct_index = [&]() {
-            if (config.fix_irreversible_blocks) {
-               block_log::repair_log(block_file.get_file_path().parent_path(), UINT32_MAX);
-               block_log::construct_index(block_file.get_file_path(), index_file.get_file_path());
-            } else {
-               log_data.construct_index(index_file.get_file_path());
-            }
-         };
-
          if (index_size) {
             ilog("Index is nonempty");
             uint64_t block_pos;
@@ -333,12 +324,9 @@ namespace eosio { namespace chain {
                ilog("Index is incomplete");
                construct_index();
             }
-            else {
-               reconstruct_index();
-            } 
          } else {
-            ilog("Index is empty. Reconstructing index...");
-            reconstruct_index();
+            ilog("Index is empty");
+            construct_index();
          }
 
          if(!is_currently_pruned && my->prune_config) {
