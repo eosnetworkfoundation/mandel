@@ -68,6 +68,7 @@ public:
 
    protocol_feature_t get_type()const { return _type; }
 
+   friend struct fc::reflector<protocol_feature_base>;
 public:
    std::string                               protocol_feature_type;
    digest_type                               description_digest;
@@ -95,6 +96,7 @@ public:
    builtin_protocol_feature_t get_codename()const { return _codename; }
 
    friend class protocol_feature_set;
+   friend struct fc::reflector<builtin_protocol_feature>;
 
 public:
    std::string                 builtin_feature_codename;
@@ -402,7 +404,7 @@ FC_REFLECT(eosio::chain::protocol_feature_subjective_restrictions,
                (earliest_allowed_activation_time)(preactivation_required)(enabled))
 
 FC_REFLECT(eosio::chain::protocol_feature_base,
-               (protocol_feature_type)(dependencies)(description_digest)(subjective_restrictions))
+               (protocol_feature_type)(dependencies)(description_digest)(subjective_restrictions), (_type))
 
 FC_REFLECT_DERIVED(eosio::chain::builtin_protocol_feature, (eosio::chain::protocol_feature_base),
-                     (builtin_feature_codename))
+                     (builtin_feature_codename), (_codename))

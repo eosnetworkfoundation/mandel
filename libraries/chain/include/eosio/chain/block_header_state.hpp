@@ -182,7 +182,8 @@ FC_REFLECT_DERIVED(  eosio::chain::block_header_state, (eosio::chain::detail::bl
                      (header)
                      (pending_schedule)
                      (activated_protocol_features)
-                     (additional_signatures)
+                     (additional_signatures),
+                     (header_exts) // ignored
 )
 
 

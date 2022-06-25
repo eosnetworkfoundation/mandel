@@ -293,11 +293,11 @@ CHAINBASE_SET_INDEX_TYPE(eosio::chain::index256_object, eosio::chain::index256_i
 CHAINBASE_SET_INDEX_TYPE(eosio::chain::index_double_object, eosio::chain::index_double_index)
 CHAINBASE_SET_INDEX_TYPE(eosio::chain::index_long_double_object, eosio::chain::index_long_double_index)
 
-FC_REFLECT(eosio::chain::table_id_object, (code)(scope)(table)(payer)(count) )
-FC_REFLECT(eosio::chain::key_value_object, (primary_key)(payer)(value) )
+FC_REFLECT(eosio::chain::table_id_object, (code)(scope)(table)(payer)(count), (id) )
+FC_REFLECT(eosio::chain::key_value_object, (primary_key)(payer)(value), (id)(t_id) )
 
 #define REFLECT_SECONDARY(type)\
-  FC_REFLECT(type, (primary_key)(payer)(secondary_key) )
+  FC_REFLECT(type, (primary_key)(payer)(secondary_key), (id)(t_id) )
 
 REFLECT_SECONDARY(eosio::chain::index64_object)
 REFLECT_SECONDARY(eosio::chain::index128_object)

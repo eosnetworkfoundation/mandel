@@ -76,9 +76,9 @@ private:
    }
 };
 
-FC_REFLECT( base_reflect, (bv) )
-FC_REFLECT_DERIVED( derived_reflect, (base_reflect), (dv) )
-FC_REFLECT_DERIVED( final_reflect, (derived_reflect), (fv) )
+FC_REFLECT( base_reflect, (bv), (base_reflect_initialized)(base_reflect_called) )
+FC_REFLECT_DERIVED( derived_reflect, (base_reflect), (dv), (derived_reflect_initialized)(derived_reflect_called) )
+FC_REFLECT_DERIVED( final_reflect, (derived_reflect), (fv), (final_reflect_initialized)(final_reflect_called) )
 
 namespace eosio
 {

@@ -173,6 +173,7 @@ public:
 
 
 private:
+  friend struct fc::reflector<host_def>;
   uint16_t p2p_count;
   uint16_t http_count;
   string   dot_label_str;
@@ -230,6 +231,7 @@ public:
      return name.substr( name.length() - 2 );
   }
 private:
+  friend struct fc::reflector<eosd_def>;
   string dot_label_str;
 };
 
@@ -2097,9 +2099,9 @@ int main (int argc, char *argv[]) {
 
 
 //-------------------------------------------------------------
-// @ignore local_config_file
 FC_REFLECT( remote_deploy,
-            (ssh_cmd)(scp_cmd)(ssh_identity)(ssh_args) )
+            (ssh_cmd)(scp_cmd)(ssh_identity)(ssh_args),
+            (local_config_file) )
 
 FC_REFLECT( prodkey_def,
             (producer_name)(block_signing_key))
@@ -2107,21 +2109,20 @@ FC_REFLECT( prodkey_def,
 FC_REFLECT( producer_set_def,
             (schedule))
 
-// @ignore listen_addr, p2p_count, http_count, dot_label_str
 FC_REFLECT( host_def,
             (genesis)(ssh_identity)(ssh_args)(eosio_home)
             (host_name)(public_name)
             (base_p2p_port)(base_http_port)(def_file_size)
-            (instances) )
+            (instances),
+            (listen_addr)(p2p_count)(http_count)(dot_label_str) )
 
-// @ignore node, dot_label_str
 FC_REFLECT( eosd_def,
             (config_dir_name)(data_dir_name)(p2p_port)
             (http_port)(file_size)(name)(host)
-            (p2p_endpoint) )
+            (p2p_endpoint),
+            (node)(dot_label_str) )
 
-// @ignore instance, gelf_endpoint
-FC_REFLECT( tn_node_def, (name)(keys)(peers)(producers)(dont_start) )
+FC_REFLECT( tn_node_def, (name)(keys)(peers)(producers)(dont_start), (instance)(gelf_endpoint) )
 
 FC_REFLECT( testnet_def, (name)(ssh_helper)(nodes) )
 

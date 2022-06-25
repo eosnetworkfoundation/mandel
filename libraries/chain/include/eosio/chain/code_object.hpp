@@ -37,4 +37,4 @@ namespace eosio { namespace chain {
 
 CHAINBASE_SET_INDEX_TYPE(eosio::chain::code_object, eosio::chain::code_index)
 
-FC_REFLECT(eosio::chain::code_object, (code_hash)(code)(code_ref_count)(first_block_used)(vm_type)(vm_version))
+FC_REFLECT(eosio::chain::code_object, (code_hash)(code)(code_ref_count)(first_block_used)(vm_type)(vm_version), (id))
