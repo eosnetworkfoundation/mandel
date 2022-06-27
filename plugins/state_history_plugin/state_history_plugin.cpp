@@ -215,7 +215,7 @@ struct state_history_plugin_impl : std::enable_shared_from_this<state_history_pl
          auto& chain              = plugin->chain_plug->chain();
          result.last_irreversible = {chain.last_irreversible_block_num(), chain.last_irreversible_block_id()};
          uint32_t current =
-               current_request->irreversible_only ? result.last_irreversible.block_num : result.head.block_num;
+            current_request->irreversible_only ? result.last_irreversible.block_num : result.head.block_num;
          if (current_request->start_block_num <= current &&
              current_request->start_block_num < current_request->end_block_num) {
             auto block_id = plugin->get_block_id(current_request->start_block_num);
