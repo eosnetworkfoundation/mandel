@@ -29,7 +29,7 @@ namespace eosio::chain {
       return 0;
    }
 
-   static constexpr uint64_t string_to_uint64_t( std::string_view str ) {
+   inline constexpr uint64_t string_to_uint64_t( std::string_view str ) {
       EOS_ASSERT(str.size() <= 13, name_type_exception, "Name is longer than 13 characters (${name}) ", ("name", std::string(str)));
 
       uint64_t n = 0;
@@ -44,12 +44,8 @@ namespace eosio::chain {
       // The for-loop encoded up to 60 high bits into uint64 'name' variable,
       // if (strlen(str) > 12) then encode str[12] into the low (remaining)
       // 4 bits of 'name'
-      if (i == 12 && str[12])
-      {
-         uint64_t cur_v = char_to_symbol(str[12]);
-         EOS_ASSERT(cur_v <= 0x0Full, name_type_exception, "invalid 13th character: (${c})", ("c", std::string(1, str[12])));
-         n |= cur_v;
-      }
+      if (i < str.size() && i == 12)
+         n |= char_to_symbol(str[12]) & 0x0F;
       return n;
    }
 
