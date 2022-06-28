@@ -221,13 +221,11 @@ add_test(NAME plugin_http_api_test COMMAND tests/plugin_http_api_test.py WORKING
 set_tests_properties(plugin_http_api_test PROPERTIES TIMEOUT 40)
 set_property(TEST plugin_http_api_test PROPERTY LABELS nonparallelizable_tests)
 
-<<<<<<< HEAD
 add_test(NAME resource_monitor_plugin_test COMMAND tests/resource_monitor_plugin_test.py WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 set_property(TEST resource_monitor_plugin_test PROPERTY LABELS long_running_tests)
-=======
+
 add_test(NAME light_validation_sync_test COMMAND tests/light_validation_sync_test.py -v --clean-run --dump-error-detail WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 set_property(TEST light_validation_sync_test PROPERTY LABELS long_running_tests)
->>>>>>> e5dc972173... add light validation sync test
 
 if(ENABLE_COVERAGE_TESTING)
 
