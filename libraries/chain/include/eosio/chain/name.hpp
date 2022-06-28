@@ -44,8 +44,13 @@ namespace eosio::chain {
       // The for-loop encoded up to 60 high bits into uint64 'name' variable,
       // if (strlen(str) > 12) then encode str[12] into the low (remaining)
       // 4 bits of 'name'
-      if (i < str.size() && i == 12)
-         n |= char_to_symbol(str[12]) & 0x0F;
+      if (i < str.size() && i == 12) {
+         // The 13th character must be in the range [.1-5a-j] because it needs to be encoded
+         // using only four bits (64_bits - 5_bits_per_char * 12_chars).
+         auto s = char_to_symbol(str[12]);
+         EOS_ASSERT(s <= 0x0Full, name_type_exception, "invalid 13th character:(${c}), must be in the range of [.1-5a-j]", ("c", std::string(1, str[12])));
+         n |= s & 0x0F;
+      }
       return n;
    }
 
