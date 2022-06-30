@@ -41,7 +41,7 @@ try:
     TestHelper.printSystemInfo("BEGIN")
     cluster.killall(allInstances=killAll)
     cluster.cleanup()
-
+    traceNodeosArgs = " --plugin eosio::trace_api_plugin --trace-no-abis "
     assert cluster.launch(
         pnodes=1,
         prodCount=1,
@@ -49,6 +49,7 @@ try:
         totalNodes=2,
         useBiosBootFile=False,
         loadSystemContract=False,
+        extraNodeosArgs=traceNodeosArgs,
         specificExtraNodeosArgs={
             1:"--validation-mode light"})
 
@@ -67,14 +68,14 @@ try:
     wasmFile="payloadless.wasm"
     abiFile="payloadless.abi"
     Utils.Print("Publish payloadless contract")
-    trans = producerNode.publishContract(payloadlessAcc, contractDir, wasmFile, abiFile, waitForTransBlock=True)
+    trans = producerNode.publishContract(payloadlessAcc.name, contractDir, wasmFile, abiFile, waitForTransBlock=True)
 
     trx = {
         "actions": [{"account": "payloadless", "name": "doit", "authorization": [{
           "actor": "payloadless", "permission": "active"}], "data": ""}],
         "context_free_actions": [{"account": "payloadless", "name": "doit", "data": ""}],
         "context_free_data": ["a1b2c3", "1a2b3c"],
-    } 
+    }
 
     cmd = "push transaction '{}' -p payloadless".format(json.dumps(trx))
     trans = producerNode.processCleosCmd(cmd, cmd, silentErrors=False)
@@ -94,7 +95,7 @@ try:
     assert trans["account_name"], "Failed to get the account payloadless"
 
     Utils.Print("verify the context free transaction from validation node")
-    cmd = "get transaction " + cfTrxId
+    cmd = "get transaction_trace " + cfTrxId
     trans = validationNode.processCleosCmd(cmd, cmd, silentErrors=False)
     assert trans, "Failed to get the transaction with context free data from the light validation node"
 
