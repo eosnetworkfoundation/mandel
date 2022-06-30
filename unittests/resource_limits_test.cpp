@@ -434,13 +434,13 @@ BOOST_AUTO_TEST_SUITE(resource_limits_test)
 
       // Create test account with limited NET quota
       main.create_accounts( {test_account, test_account2} );
-      main.push_action( config::system_account_name, N(setalimits), config::system_account_name, fc::mutable_variant_object()
+      main.push_action( config::system_account_name, "setalimits"_n, config::system_account_name, fc::mutable_variant_object()
          ("account",    test_account)
          ("ram_bytes",  -1)
          ("net_weight", net_weight)
          ("cpu_weight", -1)
       );
-      main.push_action( config::system_account_name, N(setalimits), config::system_account_name, fc::mutable_variant_object()
+      main.push_action( config::system_account_name, "setalimits"_n, config::system_account_name, fc::mutable_variant_object()
          ("account",    test_account2)
          ("ram_bytes",  -1)
          ("net_weight", other_net_weight)
@@ -464,11 +464,11 @@ BOOST_AUTO_TEST_SUITE(resource_limits_test)
 
       // NET quota of test account should be enough to support one but not two reqauth transactions.
       int64_t before_net_usage = rlm.get_account_net_limit_ex( test_account ).first.used;
-      main.push_action( config::system_account_name, N(reqauth), test_account, fc::mutable_variant_object()("from", "alice"), 6 );
+      main.push_action( config::system_account_name, "reqauth"_n, test_account, fc::mutable_variant_object()("from", "alice"), 6 );
       int64_t after_net_usage = rlm.get_account_net_limit_ex( test_account ).first.used;
       int64_t reqauth_net_usage_delta = after_net_usage - before_net_usage;
       BOOST_REQUIRE_EXCEPTION( 
-         main.push_action( config::system_account_name, N(reqauth), test_account, fc::mutable_variant_object()("from", "alice"), 7 ),
+         main.push_action( config::system_account_name, "reqauth"_n, test_account, fc::mutable_variant_object()("from", "alice"), 7 ),
          fc::exception, fc_exception_code_is( tx_net_usage_exceeded::code_value )
       );
       trigger_block = main.produce_block();
@@ -497,11 +497,12 @@ BOOST_AUTO_TEST_SUITE(resource_limits_test)
       // Push trigger block to validator node.
       // This should fail because the NET bill calculated by the fully-validating node will differ from the one in the block.
       {
-         auto bs = validator.control->create_block_state_future( trigger_block );
+         auto bs = validator.control->create_block_state_future( trigger_block->calculate_id(), trigger_block );
          validator.control->abort_block();
+         controller::block_report br;
          BOOST_REQUIRE_EXCEPTION(
-            validator.control->push_block( bs, forked_branch_callback{}, trx_meta_cache_lookup{} ), 
-            fc::exception, fc_exception_message_is( "receipt does not match" )
+            validator.control->push_block( br, bs, forked_branch_callback{}, trx_meta_cache_lookup{} ), 
+            fc::exception, fc_exception_message_starts_with( "receipt does not match" )
          );
       }
 
@@ -510,10 +511,11 @@ BOOST_AUTO_TEST_SUITE(resource_limits_test)
       // Because validator2 is in light validation mode, it does not compute the NET bill itself and instead only relies on the value in the block.
       // The failure will be due to failing check_net_usage within transaction_context::finalize because the NET bill in the block is too high.
       {
-         auto bs = validator2.control->create_block_state_future( trigger_block );
+         auto bs = validator2.control->create_block_state_future( trigger_block->calculate_id(), trigger_block );
          validator2.control->abort_block();
+         controller::block_report br;
          BOOST_REQUIRE_EXCEPTION(
-            validator2.control->push_block( bs, forked_branch_callback{}, trx_meta_cache_lookup{} ), 
+            validator2.control->push_block( br, bs, forked_branch_callback{}, trx_meta_cache_lookup{} ), 
             fc::exception, fc_exception_code_is( tx_net_usage_exceeded::code_value )
          );
       }
@@ -539,20 +541,22 @@ BOOST_AUTO_TEST_SUITE(resource_limits_test)
       // Push new trigger block to validator node.
       // This should still fail because the NET bill is incorrect.
       {
-         auto bs = validator.control->create_block_state_future( trigger_block );
+         auto bs = validator.control->create_block_state_future( trigger_block->calculate_id(), trigger_block );
          validator.control->abort_block();
+         controller::block_report br;
          BOOST_REQUIRE_EXCEPTION(
-            validator.control->push_block( bs, forked_branch_callback{}, trx_meta_cache_lookup{} ), 
-            fc::exception, fc_exception_message_is( "receipt does not match" )
+            validator.control->push_block( br, bs, forked_branch_callback{}, trx_meta_cache_lookup{} ), 
+            fc::exception, fc_exception_message_starts_with( "receipt does not match" )
          );
       }
 
       // Push new trigger block to validator2 node.
       // Because validator2 is in light validation mode, this will not fail despite the fact that the NET bill is incorrect.
       {
-         auto bs = validator2.control->create_block_state_future( trigger_block );
+         auto bs = validator2.control->create_block_state_future( trigger_block->calculate_id(), trigger_block );
          validator2.control->abort_block();
-         validator2.control->push_block( bs, forked_branch_callback{}, trx_meta_cache_lookup{} );
+         controller::block_report br;
+         validator2.control->push_block( br, bs, forked_branch_callback{}, trx_meta_cache_lookup{} );
       }
    } FC_LOG_AND_RETHROW()
 

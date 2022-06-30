@@ -1498,7 +1498,7 @@ struct controller_impl {
 
          try {
             if( trx->implicit ) {
-               EOS_ASSERT( !explicit_net_usage_words.valid(), transaction_exception, "NET usage cannot be explicitly set for implicit transactions" );
+               EOS_ASSERT( !explicit_net_usage_words, transaction_exception, "NET usage cannot be explicitly set for implicit transactions" );
                trx_context.init_for_implicit_trx();
                trx_context.enforce_whiteblacklist = false;
             } else {

@@ -270,6 +270,7 @@ namespace eosio { namespace chain {
    void transaction_context::init_for_input_trx_with_explicit_net( uint32_t explicit_net_usage_words,
                                                                    bool skip_recording )
    {
+      const transaction& trx = packed_trx.get_transaction();
       if( trx.transaction_extensions.size() > 0 ) {
          disallow_transaction_extensions( "no transaction extensions supported yet for input transactions" );
       }
@@ -282,6 +283,7 @@ namespace eosio { namespace chain {
 
    void transaction_context::init_for_input_trx_common( uint64_t initial_net_usage, bool skip_recording )
    {
+      const transaction& trx = packed_trx.get_transaction();
       published = control.pending_block_time();
       is_input = true;
       if (!control.skip_trx_checks()) {
