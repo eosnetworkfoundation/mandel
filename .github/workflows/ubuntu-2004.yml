@@ -154,6 +154,7 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -j $(nproc) -LE "nonparallelizable_tests|long_running_tests|wasm_spec_tests"'
+        continue-on-error: true
       - uses: actions/upload-artifact@v3
         with:
           name: parallel-logs
@@ -182,6 +183,7 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -j $(nproc) -L "wasm_spec_tests" -E "conversions.*|f32.*|f64.*|unreachable.*|const.*"'
+        continue-on-error: true
       - uses: actions/upload-artifact@v3
         with:
           name: wasm-logs
@@ -210,6 +212,7 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -j $(nproc) -L "wasm_spec_tests" -R "conversions.*|f32.*|f64.*|unreachable.*|const.*"'
+        continue-on-error: true
       - uses: actions/upload-artifact@v3
         with:
           name: wasm-logs-2
@@ -239,6 +242,7 @@ jobs:
           docker pull ${UBUNTU_2004_IMAGE}
           echo =====
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -L "nonparallelizable_tests"'
+        continue-on-error: true
       - uses: actions/upload-artifact@v3
         with:
           name: serial-logs
@@ -267,6 +271,7 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -L "long_running_tests" -E "nodeos_short_fork_take_over_lr_test|nodeos_under_min_avail_ram_lr_test|nodeos_startup_catchup_lr_test|nodeos_producer_watermark_lr_test|nodeos_irreversible_mode_lr_test|nodeos_forked_chain_lr_test|nodeos_voting_lr_test|nodeos_high_transaction_lr_test|nodeos_retry_transaction_lr_test"'
+        continue-on-error: true
       - uses: actions/upload-artifact@v3
         with:
           name: long-logs
@@ -295,6 +300,7 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -R nodeos_short_fork_take_over_lr_test'
+        continue-on-error: true
       - uses: actions/upload-artifact@v3
         with:
           name: short-fork-logs
@@ -323,6 +329,7 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -R nodeos_under_min_avail_ram_lr_test'
+        continue-on-error: true
       - uses: actions/upload-artifact@v3
         with:
           name: min-avail-ram-logs
@@ -351,6 +358,7 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -R nodeos_startup_catchup_lr_test'
+        continue-on-error: true
       - uses: actions/upload-artifact@v3
         with:
           name: startup-catchup-logs
@@ -379,6 +387,7 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -R nodeos_producer_watermark_lr_test'
+        continue-on-error: true
       - uses: actions/upload-artifact@v3
         with:
           name: producer-watermark-logs
@@ -407,6 +416,7 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -R nodeos_irreversible_mode_lr_test'
+        continue-on-error: true
       - uses: actions/upload-artifact@v3
         with:
           name: irreversible-logs
@@ -435,6 +445,7 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -R nodeos_forked_chain_lr_test'
+        continue-on-error: true
       - uses: actions/upload-artifact@v3
         with:
           name: forked-chain-logs
@@ -463,6 +474,7 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -R nodeos_voting_lr_test'
+        continue-on-error: true
       - uses: actions/upload-artifact@v3
         with:
           name: voting-logs
@@ -491,6 +503,7 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -R nodeos_high_transaction_lr_test'
+        continue-on-error: true
       - uses: actions/upload-artifact@v3
         with:
           name: high-trx-logs
@@ -519,6 +532,7 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -R nodeos_retry_transaction_lr_test'
+        continue-on-error: true
       - uses: actions/upload-artifact@v3
         with:
           name: retry-trx-logs
