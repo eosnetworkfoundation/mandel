@@ -155,13 +155,16 @@ jobs:
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -j $(nproc) -LE "nonparallelizable_tests|long_running_tests|wasm_spec_tests"'
         continue-on-error: true
+      - name: Copy out files from volume
+        run: |
+          sudo cp -r build/var/* /home/var
+          sudo cp -r build/etc/* /home/etc
+          sudo cp -r build/ctest-output.log /home/
       - uses: actions/upload-artifact@v3
         with:
           name: parallel-logs
           path: |
-            build/var/*
-            build/etc/*
-            build/ctest-output.log
+            /home/*
   ubuntu-2004-wasm-test:
     name: Ubuntu 20.04 | WASM Spec Test
     runs-on: ubuntu-latest
