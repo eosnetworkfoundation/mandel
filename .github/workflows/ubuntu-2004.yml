@@ -154,13 +154,14 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -j $(nproc) -LE "nonparallelizable_tests|long_running_tests|wasm_spec_tests"'
-        continue-on-error: true
       - name: Copy out files from volume
+        if: always()
         run: |
           sudo cp -r build/var/* /home/var
           sudo cp -r build/etc/* /home/etc
           sudo cp -r build/ctest-output.log /home/
       - uses: actions/upload-artifact@v3
+        if: always()
         with:
           name: parallel-logs
           path: |
@@ -186,14 +187,18 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -j $(nproc) -L "wasm_spec_tests" -E "conversions.*|f32.*|f64.*|unreachable.*|const.*"'
-        continue-on-error: true
+      - name: Copy out files from volume
+        if: always()
+        run: |
+          sudo cp -r build/var/* /home/var
+          sudo cp -r build/etc/* /home/etc
+          sudo cp -r build/ctest-output.log /home/
       - uses: actions/upload-artifact@v3
+        if: always()
         with:
-          name: wasm-logs
+          name: parallel-logs
           path: |
-            build/var/*
-            build/etc/*
-            build/ctest-output.log
+            /home/*
   ubuntu-2004-wasm-test-2:
     name: Ubuntu 20.04 | WASM Spec Test 2
     runs-on: ubuntu-latest
@@ -215,14 +220,18 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -j $(nproc) -L "wasm_spec_tests" -R "conversions.*|f32.*|f64.*|unreachable.*|const.*"'
-        continue-on-error: true
+      - name: Copy out files from volume
+        if: always()
+        run: |
+          sudo cp -r build/var/* /home/var
+          sudo cp -r build/etc/* /home/etc
+          sudo cp -r build/ctest-output.log /home/
       - uses: actions/upload-artifact@v3
+        if: always()
         with:
-          name: wasm-logs-2
+          name: parallel-logs
           path: |
-            build/var/*
-            build/etc/*
-            build/ctest-output.log
+            /home/*
   ubuntu-2004-serial-test:
     name: Ubuntu 20.04 | Serial Test
     runs-on: ubuntu-latest
@@ -245,14 +254,18 @@ jobs:
           docker pull ${UBUNTU_2004_IMAGE}
           echo =====
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -L "nonparallelizable_tests"'
-        continue-on-error: true
+      - name: Copy out files from volume
+        if: always()
+        run: |
+          sudo cp -r build/var/* /home/var
+          sudo cp -r build/etc/* /home/etc
+          sudo cp -r build/ctest-output.log /home/
       - uses: actions/upload-artifact@v3
+        if: always()
         with:
-          name: serial-logs
+          name: parallel-logs
           path: |
-            build/var/*
-            build/etc/*
-            build/ctest-output.log
+            /home/*
   ubuntu-2004-long-test:
     name: Ubuntu 20.04 | Long-Running Test
     runs-on: ubuntu-latest
@@ -274,14 +287,18 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -L "long_running_tests" -E "nodeos_short_fork_take_over_lr_test|nodeos_under_min_avail_ram_lr_test|nodeos_startup_catchup_lr_test|nodeos_producer_watermark_lr_test|nodeos_irreversible_mode_lr_test|nodeos_forked_chain_lr_test|nodeos_voting_lr_test|nodeos_high_transaction_lr_test|nodeos_retry_transaction_lr_test"'
-        continue-on-error: true
+      - name: Copy out files from volume
+        if: always()
+        run: |
+          sudo cp -r build/var/* /home/var
+          sudo cp -r build/etc/* /home/etc
+          sudo cp -r build/ctest-output.log /home/
       - uses: actions/upload-artifact@v3
+        if: always()
         with:
-          name: long-logs
+          name: parallel-logs
           path: |
-            build/var/*
-            build/etc/*
-            build/ctest-output.log
+            /home/*
   nodeos_short_fork_take_over_lr_test:
     name: Ubuntu 20.04 | nodeos_short_fork_take_over_lr_test
     runs-on: ubuntu-latest
@@ -303,14 +320,18 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -R nodeos_short_fork_take_over_lr_test'
-        continue-on-error: true
+      - name: Copy out files from volume
+        if: always()
+        run: |
+          sudo cp -r build/var/* /home/var
+          sudo cp -r build/etc/* /home/etc
+          sudo cp -r build/ctest-output.log /home/
       - uses: actions/upload-artifact@v3
+        if: always()
         with:
-          name: short-fork-logs
+          name: parallel-logs
           path: |
-            build/var/*
-            build/etc/*
-            build/ctest-output.log
+            /home/*
   nodeos_under_min_avail_ram_lr_test:
     name: Ubuntu 20.04 | nodeos_under_min_avail_ram_lr_test
     runs-on: ubuntu-latest
@@ -332,14 +353,18 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -R nodeos_under_min_avail_ram_lr_test'
-        continue-on-error: true
+      - name: Copy out files from volume
+        if: always()
+        run: |
+          sudo cp -r build/var/* /home/var
+          sudo cp -r build/etc/* /home/etc
+          sudo cp -r build/ctest-output.log /home/
       - uses: actions/upload-artifact@v3
+        if: always()
         with:
-          name: min-avail-ram-logs
+          name: parallel-logs
           path: |
-            build/var/*
-            build/etc/*
-            build/ctest-output.log
+            /home/*
   nodeos_startup_catchup_lr_test:
     name: Ubuntu 20.04 | nodeos_startup_catchup_lr_test
     runs-on: ubuntu-latest
@@ -361,14 +386,18 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -R nodeos_startup_catchup_lr_test'
-        continue-on-error: true
+      - name: Copy out files from volume
+        if: always()
+        run: |
+          sudo cp -r build/var/* /home/var
+          sudo cp -r build/etc/* /home/etc
+          sudo cp -r build/ctest-output.log /home/
       - uses: actions/upload-artifact@v3
+        if: always()
         with:
-          name: startup-catchup-logs
+          name: parallel-logs
           path: |
-            build/var/*
-            build/etc/*
-            build/ctest-output.log
+            /home/*
   nodeos_producer_watermark_lr_test:
     name: Ubuntu 20.04 | nodeos_producer_watermark_lr_test
     runs-on: ubuntu-latest
@@ -390,14 +419,18 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -R nodeos_producer_watermark_lr_test'
-        continue-on-error: true
+      - name: Copy out files from volume
+        if: always()
+        run: |
+          sudo cp -r build/var/* /home/var
+          sudo cp -r build/etc/* /home/etc
+          sudo cp -r build/ctest-output.log /home/
       - uses: actions/upload-artifact@v3
+        if: always()
         with:
-          name: producer-watermark-logs
+          name: parallel-logs
           path: |
-            build/var/*
-            build/etc/*
-            build/ctest-output.log
+            /home/*
   nodeos_irreversible_mode_lr_test:
     name: Ubuntu 20.04 | nodeos_irreversible_mode_lr_test
     runs-on: ubuntu-latest
@@ -419,14 +452,18 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -R nodeos_irreversible_mode_lr_test'
-        continue-on-error: true
+      - name: Copy out files from volume
+        if: always()
+        run: |
+          sudo cp -r build/var/* /home/var
+          sudo cp -r build/etc/* /home/etc
+          sudo cp -r build/ctest-output.log /home/
       - uses: actions/upload-artifact@v3
+        if: always()
         with:
-          name: irreversible-logs
+          name: parallel-logs
           path: |
-            build/var/*
-            build/etc/*
-            build/ctest-output.log
+            /home/*
   nodeos_forked_chain_lr_test:
     name: Ubuntu 20.04 | nodeos_forked_chain_lr_test
     runs-on: ubuntu-latest
@@ -448,14 +485,18 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -R nodeos_forked_chain_lr_test'
-        continue-on-error: true
+      - name: Copy out files from volume
+        if: always()
+        run: |
+          sudo cp -r build/var/* /home/var
+          sudo cp -r build/etc/* /home/etc
+          sudo cp -r build/ctest-output.log /home/
       - uses: actions/upload-artifact@v3
+        if: always()
         with:
-          name: forked-chain-logs
+          name: parallel-logs
           path: |
-            build/var/*
-            build/etc/*
-            build/ctest-output.log
+            /home/*
   nodeos_voting_lr_test:
     name: Ubuntu 20.04 | nodeos_voting_lr_test
     runs-on: ubuntu-latest
@@ -477,14 +518,18 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -R nodeos_voting_lr_test'
-        continue-on-error: true
+      - name: Copy out files from volume
+        if: always()
+        run: |
+          sudo cp -r build/var/* /home/var
+          sudo cp -r build/etc/* /home/etc
+          sudo cp -r build/ctest-output.log /home/
       - uses: actions/upload-artifact@v3
+        if: always()
         with:
-          name: voting-logs
+          name: parallel-logs
           path: |
-            build/var/*
-            build/etc/*
-            build/ctest-output.log
+            /home/*
   nodeos_high_transaction_lr_test:
     name: Ubuntu 20.04 | nodeos_high_transaction_lr_test
     runs-on: ubuntu-latest
@@ -506,14 +551,18 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -R nodeos_high_transaction_lr_test'
-        continue-on-error: true
+      - name: Copy out files from volume
+        if: always()
+        run: |
+          sudo cp -r build/var/* /home/var
+          sudo cp -r build/etc/* /home/etc
+          sudo cp -r build/ctest-output.log /home/
       - uses: actions/upload-artifact@v3
+        if: always()
         with:
-          name: high-trx-logs
+          name: parallel-logs
           path: |
-            build/var/*
-            build/etc/*
-            build/ctest-output.log
+            /home/*
   nodeos_retry_transaction_lr_test:
     name: Ubuntu 20.04 | nodeos_retry_transaction_lr_test
     runs-on: ubuntu-latest
@@ -535,11 +584,15 @@ jobs:
           export DOCKER="docker run --rm -v ${GITHUB_WORKSPACE}:${GITHUB_WORKSPACE} -w ${GITHUB_WORKSPACE} ${UBUNTU_2004_IMAGE}"
           docker pull ${UBUNTU_2004_IMAGE}
           ${DOCKER} bash -c 'cd build && ctest --output-on-failure -R nodeos_retry_transaction_lr_test'
-        continue-on-error: true
+      - name: Copy out files from volume
+        if: always()
+        run: |
+          sudo cp -r build/var/* /home/var
+          sudo cp -r build/etc/* /home/etc
+          sudo cp -r build/ctest-output.log /home/
       - uses: actions/upload-artifact@v3
+        if: always()
         with:
-          name: retry-trx-logs
+          name: parallel-logs
           path: |
-            build/var/*
-            build/etc/*
-            build/ctest-output.log
+            /home/*
