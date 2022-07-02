@@ -221,11 +221,10 @@ jobs:
       - name: Copy out files from volume
         if: always()
         run: |
-          sudo mkdir build/logs
-          sudo cp -r build/var /home/logs
-          sudo cp -r build/etc /home/logs
+          sudo mkdir /home/logs
+          sudo tar -czf /home/logs/serial_logs.tar.gz build/var build/etc
       - uses: actions/upload-artifact@v3
-        if: always()
+        if: failure()
         with:
           name: serial-logs
           path: |
@@ -254,13 +253,12 @@ jobs:
       - name: Copy out files from volume
         if: always()
         run: |
-          sudo mkdir build/logs
-          sudo cp -r build/var /home/logs
-          sudo cp -r build/etc /home/logs
+          sudo mkdir /home/logs
+          sudo tar -czf /home/logs/long_logs.tar.gz build/var build/etc
       - uses: actions/upload-artifact@v3
-        if: always()
+        if: failure()
         with:
-          name: long-running-logs
+          name: long-logs
           path: |
             /home/logs/*
   nodeos_short_fork_take_over_lr_test:
@@ -287,11 +285,10 @@ jobs:
       - name: Copy out files from volume
         if: always()
         run: |
-          sudo mkdir build/logs
-          sudo cp -r build/var /home/logs
-          sudo cp -r build/etc /home/logs
+          sudo mkdir /home/logs
+          sudo tar -czf /home/logs/short_fork_logs.tar.gz build/var build/etc
       - uses: actions/upload-artifact@v3
-        if: always()
+        if: failure()
         with:
           name: short-fork-logs
           path: |
@@ -320,11 +317,10 @@ jobs:
       - name: Copy out files from volume
         if: always()
         run: |
-          sudo mkdir build/logs
-          sudo cp -r build/var /home/logs
-          sudo cp -r build/etc /home/logs
+          sudo mkdir /home/logs
+          sudo tar -czf /home/logs/under_min_avail_ram_logs.tar.gz build/var build/etc
       - uses: actions/upload-artifact@v3
-        if: always()
+        if: failure()
         with:
           name: under-min-avail-ram-logs
           path: |
@@ -353,11 +349,10 @@ jobs:
       - name: Copy out files from volume
         if: always()
         run: |
-          sudo mkdir build/logs
-          sudo cp -r build/var /home/logs
-          sudo cp -r build/etc /home/logs
+          sudo mkdir /home/logs
+          sudo tar -czf /home/logs/startup_catchup_logs.tar.gz build/var build/etc
       - uses: actions/upload-artifact@v3
-        if: always()
+        if: failure()
         with:
           name: startup-catchup-logs
           path: |
@@ -386,11 +381,10 @@ jobs:
       - name: Copy out files from volume
         if: always()
         run: |
-          sudo mkdir build/logs
-          sudo cp -r build/var /home/logs
-          sudo cp -r build/etc /home/logs
+          sudo mkdir /home/logs
+          sudo tar -czf /home/logs/producer_watermark_logs.tar.gz build/var build/etc
       - uses: actions/upload-artifact@v3
-        if: always()
+        if: failure()
         with:
           name: producer-watermark-logs
           path: |
@@ -419,11 +413,10 @@ jobs:
       - name: Copy out files from volume
         if: always()
         run: |
-          sudo mkdir build/logs
-          sudo cp -r build/var /home/logs
-          sudo cp -r build/etc /home/logs
+          sudo mkdir /home/logs
+          sudo tar -czf /home/logs/irreversible_mode_logs.tar.gz build/var build/etc
       - uses: actions/upload-artifact@v3
-        if: always()
+        if: failure()
         with:
           name: irreversible-mode-logs
           path: |
@@ -452,11 +445,10 @@ jobs:
       - name: Copy out files from volume
         if: always()
         run: |
-          sudo mkdir build/logs
-          sudo cp -r build/var /home/logs
-          sudo cp -r build/etc /home/logs
+          sudo mkdir /home/logs
+          sudo tar -czf /home/logs/forked_chain_logs.tar.gz build/var build/etc
       - uses: actions/upload-artifact@v3
-        if: always()
+        if: failure()
         with:
           name: forked-chain-logs
           path: |
@@ -485,11 +477,10 @@ jobs:
       - name: Copy out files from volume
         if: always()
         run: |
-          sudo mkdir build/logs
-          sudo cp -r build/var /home/logs
-          sudo cp -r build/etc /home/logs
+          sudo mkdir /home/logs
+          sudo tar -czf /home/logs/voting_logs.tar.gz build/var build/etc
       - uses: actions/upload-artifact@v3
-        if: always()
+        if: failure()
         with:
           name: voting-logs
           path: |
@@ -518,11 +509,10 @@ jobs:
       - name: Copy out files from volume
         if: always()
         run: |
-          sudo mkdir build/logs
-          sudo cp -r build/var /home/logs
-          sudo cp -r build/etc /home/logs
+          sudo mkdir /home/logs
+          sudo tar -czf /home/logs/high_trx_logs.tar.gz build/var build/etc
       - uses: actions/upload-artifact@v3
-        if: always()
+        if: failure()
         with:
           name: high-trx-logs
           path: |
@@ -551,11 +541,10 @@ jobs:
       - name: Copy out files from volume
         if: always()
         run: |
-          sudo mkdir build/logs
-          sudo cp -r build/var /home/logs
-          sudo cp -r build/etc /home/logs
+          sudo mkdir /home/logs
+          sudo tar -czf /home/logs/retry_trx_logs.tar.gz build/var build/etc
       - uses: actions/upload-artifact@v3
-        if: always()
+        if: failure()
         with:
           name: retry-trx-logs
           path: |
