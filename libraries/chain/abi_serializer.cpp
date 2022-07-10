@@ -106,7 +106,7 @@ namespace eosio { namespace chain {
       // TODO: Add proper support for floating point types. For now this is good enough.
       built_in_types.emplace("float32",                   pack_unpack<float>());
       built_in_types.emplace("float64",                   pack_unpack<double>());
-      built_in_types.emplace("float128",                  pack_unpack<float128_t>());
+      built_in_types.emplace("float128",                  pack_unpack<::float128_t>());
 
       built_in_types.emplace("time_point",                pack_unpack<fc::time_point>());
       built_in_types.emplace("time_point_sec",            pack_unpack<fc::time_point_sec>());
