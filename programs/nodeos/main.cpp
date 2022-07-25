@@ -23,9 +23,22 @@ using namespace eosio;
 namespace detail {
 
 fc::logging_config& add_deep_mind_logger(fc::logging_config& config) {
-   config.appenders.push_back(
-      fc::appender_config( "deep-mind", "dmlog" )
-   );
+   const auto& opts = app().get_options();
+   if( opts.count( "deep-mind-fifo" )) {
+      bfs::path fifo_file = opts.at( "deep-mind-fifo" ).as<bfs::path>();
+      if( fifo_file.is_relative()) {
+         fifo_file = bfs::current_path() / fifo_file;
+      }
+      config.appenders.push_back(
+         appender_config( "deep-mind", "dmlog",
+            mutable_variant_object()
+               ( "fifo", fifo_file.generic_string().c_str())
+      ) );
+   } else {
+      config.appenders.push_back(
+         fc::appender_config( "deep-mind", "dmlog" )
+      );
+   }
 
    fc::logger_config dmlc;
    dmlc.name = "deep-mind";
@@ -81,9 +94,9 @@ void logging_conf_handler()
 void initialize_logging()
 {
    auto config_path = app().get_logging_conf();
-   if(fc::exists(config_path))
+   if(fc::exists(config_path)) {
      fc::configure_logging(config_path); // intentionally allowing exceptions to escape
-   else {
+   } else {
       auto cfg = fc::logging_config::default_config();
 
       fc::configure_logging( ::detail::add_deep_mind_logger(cfg) );

@@ -30,6 +30,7 @@
 
 #include <fc/io/json.hpp>
 #include <fc/variant.hpp>
+#include <fc/log/logger_config.hpp>
 #include <signal.h>
 #include <cstdlib>
 
@@ -264,6 +265,7 @@ void chain_plugin::set_program_options(options_description& cli, options_descrip
           "print contract's output to console")
          ("deep-mind", bpo::bool_switch()->default_value(false),
           "print deeper information about chain operations")
+         ("deep-mind-fifo", bpo::value<bfs::path>(), "FIFO (named pipe) path for deep-mind logging. It is created either via mkfifo beforehand or dynamically. Only one of deep-mind and deep-mind-fifo can be enabled")
          ("actor-whitelist", boost::program_options::value<vector<string>>()->composing()->multitoken(),
           "Account added to actor whitelist (may specify multiple times)")
          ("actor-blacklist", boost::program_options::value<vector<string>>()->composing()->multitoken(),
@@ -1116,6 +1118,38 @@ void chain_plugin::plugin_initialize(const variables_map& options) {
          }
       }
 
+      // Deep-mind logging via FIFO.
+      if( options.count( "deep-mind-fifo" )) {
+         EOS_ASSERT( !options.at( "deep-mind").as<bool>(),
+            plugin_config_exception,
+            "deep-mind-fifo and deep-mind cannot be enabled at the same time" );
+
+         bfs::path fifo_file = options.at( "deep-mind-fifo" ).as<bfs::path>();
+         if( fifo_file.is_relative()) {
+            fifo_file = bfs::current_path() / fifo_file;
+         }
+
+         if( fc::exists( fifo_file ) ) {
+            struct stat file_stat;
+            auto rc = lstat(fifo_file.generic_string().c_str(), &file_stat);
+            EOS_ASSERT( rc ==  0,
+               plugin_config_exception,
+               "lstat failed for ${name}, ${errstr}",
+               ("name", fifo_file.generic_string()) ("errstr", strerror(errno)));
+            EOS_ASSERT( S_ISFIFO(file_stat.st_mode ),
+               plugin_config_exception,
+               "${name} not FIFO type",
+               ("name", fifo_file.generic_string()) );
+         } else {
+            auto rc = mkfifo(fifo_file.generic_string().c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP);
+            EOS_ASSERT( rc ==  0,
+               plugin_config_exception,
+               "mkfifo failed for ${name}, ${errstr}",
+               ("name", fifo_file.generic_string()) ("errstr", strerror(errno)));
+         }
+
+         my->chain->enable_deep_mind( &_deep_mind_log );
+      }
       // initialize deep mind logging
       if ( options.at( "deep-mind" ).as<bool>() ) {
          // The actual `fc::dmlog_appender` implementation that is currently used by deep mind

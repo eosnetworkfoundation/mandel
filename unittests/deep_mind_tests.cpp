@@ -14,15 +14,24 @@ struct deep_mind_log_fixture
 {
    deep_mind_handler deep_mind_logger;
    fc::temp_file log_output;
-   deep_mind_log_fixture()
+
+   deep_mind_log_fixture(const std::optional<std::string>& fifo_path={})
    {
       auto cfg = fc::logging_config::default_config();
 
-      cfg.appenders.push_back(
-         appender_config( "deep-mind", "dmlog",
-            mutable_variant_object()
-               ( "file", log_output.path().preferred_string().c_str())
+      if (fifo_path) {
+         cfg.appenders.push_back(
+            appender_config( "deep-mind", "dmlog",
+               mutable_variant_object()
+                  ( "fifo", fifo_path->c_str())
          ) );
+      } else {
+         cfg.appenders.push_back(
+            appender_config( "deep-mind", "dmlog",
+               mutable_variant_object()
+                  ( "file", log_output.path().preferred_string().c_str())
+         ) );
+      }
 
       fc::logger_config lc;
       lc.name = "deep-mind";
@@ -38,6 +47,7 @@ struct deep_mind_log_fixture
    }
    ~deep_mind_log_fixture()
    {
+     std::cout << "~deep_mind_log_fixture\n";
       fc::configure_logging(fc::logging_config::default_config());
       setup_test_logging();
    }
@@ -45,7 +55,7 @@ struct deep_mind_log_fixture
 
 struct deep_mind_tester : deep_mind_log_fixture, validating_tester
 {
-   deep_mind_tester() : validating_tester({}, &deep_mind_logger) {}
+   deep_mind_tester(const std::optional<std::string>& fifo_path={}) : deep_mind_log_fixture(fifo_path), validating_tester({}, &deep_mind_logger) {}
 };
 
 namespace {
@@ -102,13 +112,43 @@ BOOST_FIXTURE_TEST_CASE(deep_mind, deep_mind_tester)
 
    if(save_log)
    {
-      // Cannot use fc::copy as it does not copy to an existing destination file 
+      // Cannot use fc::copy as it cannot overwrite an existing destination file 
       fc::rename(log_output.path().preferred_string(), DEEP_MIND_LOGFILE);
    }
    else
    {
       compare_files(log_output.path().preferred_string(), DEEP_MIND_LOGFILE);
    }
+}
+
+BOOST_AUTO_TEST_CASE(deep_mind_fifo_test)
+{
+   fc::temp_file fifo, regular;
+
+   if (mkfifo(fifo.path().preferred_string().c_str(), S_IRUSR | S_IWUSR | S_IRGRP | S_IWGRP) < 0) {
+      FC_THROW("mkfifo failed for path ${name}, errno ${errno} --${errstr}", ("name", fifo.path().preferred_string()) ("errno", errno) ("errstr", strerror(errno)));
+   }
+
+   std::string cmd = "cat < " + fifo.path().preferred_string() + " > " + regular.path().preferred_string();
+   auto fpin =  popen(cmd.c_str(), "r");
+   if (fpin == nullptr) {
+      std::cout << "popen failed" << strerror(errno) << std::endl;
+   }
+   sleep(2);
+
+   {
+      deep_mind_tester t { fifo.path().preferred_string() };
+      t.produce_block();
+      t.create_account( "alice"_n );
+      t.push_action(config::system_account_name, "updateauth"_n, "alice"_n, fc::mutable_variant_object()
+                  ("account", "alice")
+                  ("permission", "test1")
+                  ("parent", "active")
+                  ("auth", authority{{"eosio"_n, "active"_n}}));
+      t.produce_block();
+   }
+
+   compare_files(regular.path().preferred_string(), DEEP_MIND_LOGFILE);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
