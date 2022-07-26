@@ -1,7 +1,3 @@
---
-source: https://github.com/eosnetworkfoundation/engineering/blob/main/developer_documentation/content/glossary.md
---
-
 # Glossary #
 
 ## Account ##
@@ -21,5 +17,9 @@ coming soon
 coming soon
 
 ## Public-Key ##
+
+coming soon
+
+## Private-Key ##
 
 coming soon

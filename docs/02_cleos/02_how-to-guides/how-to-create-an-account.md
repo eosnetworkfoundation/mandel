@@ -11,7 +11,7 @@ Make sure you meet the following requirements:
 * Install the currently supported version of `cleos`.
 [[info | Note]]
 | The cleos tool is bundled with the EOSIO software. [Installing EOSIO](../../00_install/index.md) will also install the cleos tool.
-* Learn about [EOSIO Accounts and Permissions](/general_info/protocol/accounts_and_permissions.md)
+* Learn about [EOSIO Accounts and Permissions](/general_info/protocol-guides/accounts_and_permissions.md)
 * Learn about Asymmetric Cryptography - [public key](/general_info/glossary.md#public-key) and [private key](/general_info/glossary.md#private-key) pairs.
 * Create public/private keypairs for the `owner` and `active` permissions of an account.
 
