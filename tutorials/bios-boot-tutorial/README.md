@@ -19,18 +19,18 @@ The `bios-boot-tutorial.py` script simulates the bios boot sequence.
 ``Steps``:
 
 1. Install mandel binaries by following the steps outlined in below tutorial
-[Install mandel binaries](https://github.com/eosnetworkfoundation/mandel/tree/release/3.0.x#Building).
+[Install mandel binaries](https://github.com/eosnetworkfoundation/mandel/tree/release/3.1.x#Building).
 
-2. Install mandel.cdt version 1.8.1 binaries by following the steps outlined in below tutorial
-[Install mandel.cdt binaries](https://github.com/eosnetworkfoundation/mandel.cdt/tree/v1.8.1#binary-releases).
+2. Install mandel.cdt version 3.0 binaries by following the steps outlined in below tutorial
+[Install mandel.cdt binaries](https://github.com/eosnetworkfoundation/mandel.cdt/tree/release/3.0#binary-releases).
 
 3. Compile `mandel-contracts` version 3.0.x
 
 ```bash
 $ cd ~
-$ git clone https://github.com/eosnetworkfoundation/mandel-contracts mandel.contracts-3.0.x
-$ cd ./mandel.contracts-3.0.x/
-$ git checkout release/3.0.x
+$ git clone https://github.com/eosnetworkfoundation/mandel-contracts release/3.1
+$ cd ./release/3.1/
+$ git checkout release/3.1
 $ ./build.sh
 $ cd ./build/contracts/
 $ pwd
@@ -51,4 +51,4 @@ $ python3 bios-boot-tutorial.py --cleos=cleos --nodeos=nodeos --keosd=keosd --co
 
 ```
 
-See [Developer Portal: Bios Boot Sequence](https://developers.eos.io/welcome/latest/tutorials/bios-boot-sequence) for additional information.
+See [Developer Portal: Bios Boot Sequence](/tutorials/bios-boot-sequence) for additional information.

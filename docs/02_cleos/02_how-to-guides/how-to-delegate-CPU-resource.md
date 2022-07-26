@@ -13,9 +13,9 @@ Make sure you meet the following requirements:
 | `cleos` is bundled with the EOSIO software. [Installing EOSIO](../../00_install/index.md) will also install `cleos`.
 
 * Ensure the reference system contracts from [`eosio.contracts`](https://github.com/eosnetworkfoundation/mandel-contracts) repository is deployed and used to manage system resources.
-* Understand what an [account](https://developers.eos.io/welcome/latest/glossary/index/#account) is and its role in the blockchain.
-* Understand [CPU bandwidth](https://developers.eos.io/welcome/latest/glossary/index/#cpu) in an EOSIO blockchain.
-* Understand [NET bandwidth](https://developers.eos.io/welcome/latest/glossary/index/#net) in an EOSIO blockchain.
+* Understand what an [account](/general_info/glossary#account) is and its role in the blockchain.
+* Understand [CPU bandwidth](/general_info/glossary#cpu) in an EOSIO blockchain.
+* Understand [NET bandwidth](/general_info/glossary#net) in an EOSIO blockchain.
 
 ## Steps
 
