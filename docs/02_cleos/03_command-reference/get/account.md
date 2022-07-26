@@ -106,4 +106,4 @@ cleos get account eosio --json
 ```
 
 ## See Also
-- [Accounts and Permissions](/general_info/protocol-guides/accounts_and_permissions) protocol document.
+- [Accounts and Permissions](/general_info/protocol-guides/accounts_and_permissions.md) protocol document.
