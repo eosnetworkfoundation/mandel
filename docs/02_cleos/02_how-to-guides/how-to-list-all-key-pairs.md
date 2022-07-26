@@ -14,7 +14,7 @@ Make sure you meet the following requirements:
 * Install the currently supported version of `cleos`.
 [[info | Note]]
 | `cleos` is bundled with the EOSIO software. [Installing EOSIO](../../00_install/index.md) will also install `cleos`.
-* Understand what a [public key](/general_info/glossary#public-key) and [private key](/general_info/glossary#private-key) is.
+* Understand what a [public key](/general_info/glossary.md#public-key) and [private key](/general_info/glossary.md#private-key) is.
 
 ## Command Reference
 
