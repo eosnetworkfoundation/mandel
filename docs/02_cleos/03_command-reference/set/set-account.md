@@ -88,4 +88,4 @@ The authority JSON object ...
 ```
 
 ## See Also
-- [Accounts and Permissions](/general_info/protocol-guides/accounts_and_permissions.md) protocol document.
+- [Accounts and Permissions](/protocol-guides/accounts_and_permissions.md) protocol document.

@@ -9,7 +9,7 @@ This how-to guide provides instructions on how to query infomation of an EOSIO a
 [[info | Note]]
 | The cleos tool is bundled with the EOSIO software. [Installing EOSIO](../../00_install/index.md) will also install the cleos tool.
 
-* Acquire functional understanding of [EOSIO Accounts and Permissions](/general_info/protocol-guides/accounts_and_permissions.md)
+* Acquire functional understanding of [EOSIO Accounts and Permissions](/protocol-guides/accounts_and_permissions.md)
 
 ## Command Reference
 
