@@ -10,7 +10,7 @@ Make sure you meet the following requirements:
 * Install the currently supported version of `cleos`.
 [[info | Note]]
 | `cleos` is bundled with the EOSIO software. [Installing EOSIO](../../00_install/index.md) will also install `cleos`.
-* Understand how transactions work in an EOSIO blockchain. For more information on transactions, see the [Transactions Protocol](/protocol-guides/transactions_protocol.md) section.
+* Understand how transactions work in an EOSIO blockchain. For more information on transactions, see the [Transactions Protocol](/protocol-guides/02_transactions_protocol.md) section.
 
 ## Command Reference
 
