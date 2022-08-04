@@ -61,7 +61,7 @@ Reference to [testnet providers](/resources/index#testnets)
 **Example Output**
 
 ```sh
-cleos -u https://api.testnet.eos.io get block 02e1c7888a92206573ae38d00e09366c7ba7bc54cd8b7996506f7d2a619c43ba
+cleos -u https://choiceofyourprovider get block 02e1c7888a92206573ae38d00e09366c7ba7bc54cd8b7996506f7d2a619c43ba
 ```
 ```json
 {
