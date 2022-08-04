@@ -34,8 +34,10 @@ Some examples are provided below:
 **Example Output**
 
 ```sh
-cleos -u https://api.testnet.eos.io get block 48351112
+cleos -u https://choiceofyourprovider get block 48351112
 ```
+Reference to [testnet providers](/resources/index#testnets)
+
 ```json
 {
   "timestamp": "2021-01-28T17:58:59.500",
