@@ -36,7 +36,7 @@ Some examples are provided below:
 ```sh
 cleos -u https://choiceofyourprovider get block 48351112
 ```
-Reference to [testnet providers](/resources/index.md#testnets)
+Reference to [testnet providers](/resources/index.md)
 
 ```json
 {
