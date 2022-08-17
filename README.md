@@ -1,10 +1,6 @@
 # Mandel
 
-Home of the official [EOS Network Foundation](https://eosnetwork.com/) blockchain node software.
-
-## Repo Organization
-
-`main` branch is the development branch: do not use this for production. Refer to the [release page](https://github.com/eosnetworkfoundation/mandel/releases) for current information on releases, pre-releases, and obsolete releases as well as the corresponding tags for those releases.
+⚠️ This repository contains an archive of the C++ implementation (code named "Mandel") for the blockchain node software of the EOSIO protocol. The repository is no longer maintained and Mandel is obsolete. It is replaced by [Leap](https://github.com/AntelopeIO/leap) which implements the Antelope protocol, an evolution of the EOSIO protocol.
 
 ## Software Installation
 
